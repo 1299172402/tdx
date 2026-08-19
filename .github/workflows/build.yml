@@ -1,0 +1,41 @@
+name: Build Tdx HTTPServer for Windows
+
+on:
+  push:
+    branches: [ main ]   # 当代码推送到 main 分支时触发
+  workflow_dispatch:     # 允许手动触发
+
+jobs:
+  build:
+    runs-on: ubuntu-latest   # 使用 Ubuntu 环境
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v7
+
+    - name: Set up Go
+      uses: actions/setup-go@v7
+      with:
+        go-version: '1.26'
+
+    - name: Build for Windows (amd64)
+      run: |
+        # 设置交叉编译的环境变量，并执行构建
+        GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -o output/tdxapi-$(date +'%Y%m%d-%H%M%S').exe example/HTTPServer/main.go
+      # GOOS=windows 指定目标系统为 Windows
+      # GOARCH=amd64 指定目标架构为 64位
+      # CGO_ENABLED=0 禁用 CGO，确保生成静态链接的纯 Go 程序，避免依赖外部 DLL
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v7
+      with:
+        name: tdxapi-windows-amd64
+        path: output/tdxapi-*.exe
+
+    - name: Upload to LanzouCloud
+      uses: 1299172402/lanzou-release@v1
+      with:
+        ylogin: ${{ secrets.LANZOU_YLOGIN }}
+        phpdisk_info: ${{ secrets.LANZOU_PHPDISK_INFO }}
+        folder_id: ${{ secrets.LANZOU_FOLDER_ID }}
+        file_path: output/tdxapi-*.exe
