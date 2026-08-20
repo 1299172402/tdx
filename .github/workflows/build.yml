@@ -2,7 +2,7 @@ name: Build Tdx HTTPServer for Windows
 
 on:
   push:
-    branches: [ main ]   # 当代码推送到 main 分支时触发
+    branches: [ master ]   # 当代码推送到 main 分支时触发
   workflow_dispatch:     # 允许手动触发
 
 jobs:
