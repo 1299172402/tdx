@@ -7,11 +7,18 @@
 
 ## 📚 参考资源
 
+- [`tdx`](https://github.com/injoyai/tdx)
 - [`gotdx`](https://github.com/bensema/gotdx)
 - [`mootdx`](https://github.com/mootdx/mootdx)
 - [`tdx2db`](https://github.com/jing2uo/tdx2db)
 - [`niexq-tdx`](https://github.com/niexqc/niexq-tdx)
 - 推荐 **Web可视化界面 + RESTful API**：[tdx-api](https://github.com/oficcejo/tdx-api)
+
+## 👇 本地 RESTful API 下载
+
+[`https://zhiyuyu.lanzout.com/b01tqjrooh`](https://zhiyuyu.lanzout.com/b01tqjrooh)
+
+密码 `tdxapi`
 
 ---
 
