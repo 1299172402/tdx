@@ -33,7 +33,7 @@ jobs:
         path: output/tdxapi-*.exe
 
     - name: Upload to LanzouCloud
-      uses: 1299172402/lanzou-release@v2
+      uses: 1299172402/lanzou-release@main
       with:
         phpdisk_info: ${{ secrets.LANZOU_PHPDISK_INFO }}
         folder_id: ${{ secrets.LANZOU_FOLDER_ID }}
