@@ -21,7 +21,7 @@ jobs:
     - name: Build for Windows (amd64)
       run: |
         # 设置交叉编译的环境变量，并执行构建
-        GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -o output/tdxapi-$(date +'%Y%m%d-%H%M%S').exe example/HTTPServer/main.go
+        GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -o output/tdxapi-$(date +'%Y%m%d-%H%M%S')-$(git rev-parse --short HEAD).exe example/HTTPServer/main.go
       # GOOS=windows 指定目标系统为 Windows
       # GOARCH=amd64 指定目标架构为 64位
       # CGO_ENABLED=0 禁用 CGO，确保生成静态链接的纯 Go 程序，避免依赖外部 DLL
