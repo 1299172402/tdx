@@ -17,7 +17,7 @@ func main() {
 	)
 	flag.StringVar(&addr, "addr", ":8080", "监听地址，例如 :8080 或 0.0.0.0:8080")
 	flag.StringVar(&hostsStr, "hosts", "103.221.142.73", "标准行情服务器地址，多个用逗号分隔，例如 host1,host2,host3")
-	flag.IntVar(&poolSize, "pool", 1, "标准连接池大小")
+	flag.IntVar(&poolSize, "pool", 4, "标准连接池大小")
 	flag.Parse()
 
 	// 处理 addr：如果是纯数字端口（不含冒号），自动加上 ":"
