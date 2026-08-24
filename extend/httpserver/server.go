@@ -11,12 +11,13 @@ import (
 type Option func(*serverConfig)
 
 type serverConfig struct {
-	addr       string
-	hosts      []string
-	poolSize   int
-	exHqHosts  []string
-	exPoolSize int
-	options    []client.Option
+	addr        string
+	hosts       []string
+	poolSize    int
+	exHqHosts   []string
+	exPoolSize  int
+	options     []client.Option
+	corsOrigins []string
 }
 
 // WithAddr 设置监听地址
@@ -49,6 +50,12 @@ func WithOptions(opts ...client.Option) Option {
 	return func(c *serverConfig) {
 		c.options = append(c.options, opts...)
 	}
+}
+
+// WithCORS 开启 CORS(跨域)支持,origins 为允许的来源列表。
+// 传空则允许所有来源(*)。例如 https://client.scalar.com
+func WithCORS(origins ...string) Option {
+	return func(c *serverConfig) { c.corsOrigins = origins }
 }
 
 // Server HTTP 服务
@@ -106,11 +113,46 @@ func New(opts ...Option) (*Server, error) {
 	mux := http.NewServeMux()
 	s.registerRoutes(mux)
 
+	handler := http.Handler(mux)
+	if cfg.corsOrigins != nil {
+		handler = cors(handler, cfg.corsOrigins)
+	}
+
 	s.server = &http.Server{
 		Addr:    cfg.addr,
-		Handler: mux,
+		Handler: handler,
 	}
 	return s, nil
+}
+
+// cors 跨域处理中间件。
+// origins 为空时允许所有来源(*);否则仅允许列表中的来源,并按请求 Origin 回显。
+// 同时处理 OPTIONS 预检请求。
+func cors(next http.Handler, origins []string) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if len(origins) > 0 {
+			origin := r.Header.Get("Origin")
+			for _, o := range origins {
+				if o == origin {
+					w.Header().Set("Access-Control-Allow-Origin", origin)
+					w.Header().Add("Vary", "Origin")
+					break
+				}
+			}
+		} else {
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+		}
+		w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "*")
+		w.Header().Set("Access-Control-Max-Age", "86400")
+
+		// 预检请求直接返回,不进入业务路由
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
 }
 
 // Default 使用默认配置创建 HTTP 服务(开启断线重连)

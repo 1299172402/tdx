@@ -80,3 +80,63 @@ func TestQueryUint16Default(t *testing.T) {
 		t.Errorf("expected default 50, got %d", got)
 	}
 }
+
+func TestCorsAllowAll(t *testing.T) {
+	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+	req := httptest.NewRequest("GET", "/", nil)
+	req.Header.Set("Origin", "https://client.scalar.com")
+	w := httptest.NewRecorder()
+	cors(next, nil).ServeHTTP(w, req)
+
+	if got := w.Header().Get("Access-Control-Allow-Origin"); got != "*" {
+		t.Errorf("expected allow all, got %q", got)
+	}
+	if w.Code != http.StatusOK {
+		t.Errorf("expected 200, got %d", w.Code)
+	}
+}
+
+func TestCorsSpecificOrigins(t *testing.T) {
+	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+	origins := []string{"https://client.scalar.com"}
+
+	// 匹配的 Origin 回显
+	req := httptest.NewRequest("GET", "/", nil)
+	req.Header.Set("Origin", "https://client.scalar.com")
+	w := httptest.NewRecorder()
+	cors(next, origins).ServeHTTP(w, req)
+	if got := w.Header().Get("Access-Control-Allow-Origin"); got != "https://client.scalar.com" {
+		t.Errorf("expected matched origin, got %q", got)
+	}
+
+	// 不匹配的 Origin 不加 CORS 头
+	req2 := httptest.NewRequest("GET", "/", nil)
+	req2.Header.Set("Origin", "https://evil.example.com")
+	w2 := httptest.NewRecorder()
+	cors(next, origins).ServeHTTP(w2, req2)
+	if got := w2.Header().Get("Access-Control-Allow-Origin"); got != "" {
+		t.Errorf("expected no allow header, got %q", got)
+	}
+}
+
+func TestCorsPreflight(t *testing.T) {
+	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Error("preflight request should not reach next handler")
+	})
+	req := httptest.NewRequest(http.MethodOptions, "/", nil)
+	req.Header.Set("Origin", "https://client.scalar.com")
+	req.Header.Set("Access-Control-Request-Method", "GET")
+	w := httptest.NewRecorder()
+	cors(next, nil).ServeHTTP(w, req)
+
+	if w.Code != http.StatusNoContent {
+		t.Errorf("expected 204, got %d", w.Code)
+	}
+	if got := w.Header().Get("Access-Control-Allow-Methods"); got != "GET, OPTIONS" {
+		t.Errorf("expected 'GET, OPTIONS', got %q", got)
+	}
+}
